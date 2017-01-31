@@ -20,8 +20,8 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
         },
         'card': {
             'type': 'Simple',
-            'title': "SessionSpeechlet - " + title,
-            'content': "SessionSpeechlet - " + output
+            'title': title,
+            'content': output
         },
         'reprompt': {
             'outputSpeech': {
@@ -49,7 +49,8 @@ def get_welcome_response():
 
     session_attributes = {}
     card_title = "CISC 1600"
-    speech_output = "Welcome to CISC sixteen hundred, the next lecture will be lecture one point one: introduction and HTML five. The next assignment will be Project one, which will be posted on February ninth."
+    speech_output = parseCisc1600Page()
+
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
     reprompt_text = None
@@ -66,6 +67,69 @@ def handle_session_end_request():
     should_end_session = True
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
+
+
+# --------------- Helpers for crawling page ------------------
+
+def parseCisc1600Page():
+    url = "http://mr-pc.org/t/cisc1600/"
+    page = urllib2.urlopen(url)
+    soup = bs4.BeautifulSoup(page, "html.parser")
+
+    table = soup.body.find('table', attrs={'id' : 'weeks'})
+    schedule = parseListOfLists(tableToListOfLists(table))
+    return describeNextClassTopic(schedule) + " " + describeNextAssignment(schedule)
+
+
+def tableToListOfLists(table):
+    data = []
+    rows = table.findAll('tr')
+    for row in rows:
+        cols = row.find_all('td')
+        cols = [ele.text.strip() for ele in cols]
+        # data.append([ele for ele in cols if ele]) # Get rid of empty values
+        data.append(cols)
+    return data
+
+def parseListOfLists(lol):
+    return [(parseDate(row[0]), row[1], row[2].split('\n '))
+            for row in lol if len(row) >= 3]
+        
+def parseDate(dateStr):
+    return datetime.datetime.strptime(dateStr.split(u'\xa0')[0], '%Y/%m/%d').date()
+
+def describeNextClassTopic(schedule, today=None):
+    if today is None:
+        today = datetime.date.today()
+        
+    for date, topic, due in schedule:
+        if date == today:
+            return "Today's topic is " + topic + "."
+        if date > today:
+            dayDiff = (date - today).days
+            if dayDiff == 1:
+                return "Tomorrow's topic will be " + topic + "."
+            else:
+                return "The next topic will be " + topic + " in " + dayDiff + " days."
+            
+def describeNextAssignment(schedule, today=None):
+    if today is None:
+        today = datetime.date.today()
+        
+    for date, topic, due in schedule:
+        if date == today and len(due) >= 1 and len(due[0]) >= 1:
+            return "Today " + formatDue(due) + "."
+        if date > today and len(due) >= 1 and len(due[0]) >= 1:
+            dayDiff = (date - today).days
+            if dayDiff == 1:
+                return "Tomorrow " + formatDue(due) + "."
+            else:
+                return "On " + date.strftime("%A, %B %d, ") + formatDue(due) + "."
+
+def formatDue(due):
+    items = [re.sub("(\w+)$", r"is \1", item)
+             for item in due if not re.search("[sS]pec", item)]
+    return " and ".join(items)
 
 
 
