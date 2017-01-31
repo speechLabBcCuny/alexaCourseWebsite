@@ -8,6 +8,10 @@ http://amzn.to/1LGWsLG
 """
 
 from __future__ import print_function
+import bs4
+import datetime
+import re
+import urllib2
 
 
 # --------------- Helpers that build all of the responses ----------------------
