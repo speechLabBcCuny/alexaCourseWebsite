@@ -110,13 +110,14 @@ def parseDate(dateStr):
 def describeNextClassTopic(schedule, now):
     for classStart, topic, due in schedule:
         if classStart > now:
+            mainTopic = topic.split('\n')[0]
             dayDiff = (classStart - now).days
             if dayDiff == 0:
-                return "Today's topic is %s." % topic
+                return "Today's topic is %s." % mainTopic
             if dayDiff == 1:
-                return "Tomorrow's topic will be %s." % topic
+                return "Tomorrow's topic will be %s." % mainTopic
             else:
-                return "The next topic will be %s in %s days." % (topic, dayDiff)
+                return "The next topic will be %s in %s days." % (mainTopic, dayDiff)
             
 def describeNextAssignment(schedule, now):
     for classStart, topic, due in schedule:
