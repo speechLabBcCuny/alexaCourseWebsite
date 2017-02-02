@@ -100,35 +100,36 @@ def parseListOfLists(lol):
             for row in lol if len(row) >= 3]
         
 def parseDate(dateStr):
-    return datetime.datetime.strptime(dateStr.split(u'\xa0')[0], '%Y/%m/%d').date()
+    return datetime.datetime.strptime(dateStr.split(u'\xa0')[0] + " 11:00",
+                                      '%Y/%m/%d %H:%M')
 
-def describeNextClassTopic(schedule, today=None):
-    if today is None:
-        today = datetime.date.today()
+def describeNextClassTopic(schedule, now=None):
+    if now is None:
+        now = datetime.datetime.now()
         
-    for date, topic, due in schedule:
-        if date == today:
-            return "Today's topic is " + topic + "."
-        if date > today:
-            dayDiff = (date - today).days
+    for classStart, topic, due in schedule:
+        if classStart > now:
+            dayDiff = (classStart - now).days
+            if dayDiff == 0:
+                return "Today's topic is %s." % topic
             if dayDiff == 1:
-                return "Tomorrow's topic will be " + topic + "."
+                return "Tomorrow's topic will be %s." % topic
             else:
-                return "The next topic will be " + topic + " in " + dayDiff + " days."
+                return "The next topic will be %s in %s days." % (topic, dayDiff)
             
-def describeNextAssignment(schedule, today=None):
-    if today is None:
-        today = datetime.date.today()
+def describeNextAssignment(schedule, now=None):
+    if now is None:
+        now = datetime.datetime.now()
         
-    for date, topic, due in schedule:
-        if date == today and len(due) >= 1 and len(due[0]) >= 1:
+    for classStart, topic, due in schedule:
+        if classStart == now and len(due) >= 1 and len(due[0]) >= 1:
             return "Today " + formatDue(due) + "."
-        if date > today and len(due) >= 1 and len(due[0]) >= 1:
-            dayDiff = (date - today).days
+        if classStart > now and len(due) >= 1 and len(due[0]) >= 1:
+            dayDiff = (classStart - now).days
             if dayDiff == 1:
                 return "Tomorrow " + formatDue(due) + "."
             else:
-                return "On " + date.strftime("%A, %B %d, ") + formatDue(due) + "."
+                return "On " + classStart.strftime("%A, %B %d, ") + formatDue(due) + "."
 
 def formatDue(due):
     items = [re.sub("(\w+)$", r"is \1", item)
