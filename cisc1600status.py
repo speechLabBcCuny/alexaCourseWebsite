@@ -75,14 +75,18 @@ def handle_session_end_request():
 
 # --------------- Helpers for crawling page ------------------
 
-def parseCisc1600Page():
+def parseCisc1600Page(now=None):
+    if now is None:
+        now = datetime.datetime.now()
+        
     url = "http://mr-pc.org/t/cisc1600/"
     page = urllib2.urlopen(url)
     soup = bs4.BeautifulSoup(page, "html.parser")
 
     table = soup.body.find('table', attrs={'id' : 'weeks'})
     schedule = parseListOfLists(tableToListOfLists(table))
-    return describeNextClassTopic(schedule) + " " + describeNextAssignment(schedule)
+    return describeNextClassTopic(schedule, now) \
+        + " " + describeNextAssignment(schedule, now)
 
 
 def tableToListOfLists(table):
@@ -103,10 +107,7 @@ def parseDate(dateStr):
     return datetime.datetime.strptime(dateStr.split(u'\xa0')[0] + " 11:00",
                                       '%Y/%m/%d %H:%M')
 
-def describeNextClassTopic(schedule, now=None):
-    if now is None:
-        now = datetime.datetime.now()
-        
+def describeNextClassTopic(schedule, now):
     for classStart, topic, due in schedule:
         if classStart > now:
             dayDiff = (classStart - now).days
@@ -117,19 +118,17 @@ def describeNextClassTopic(schedule, now=None):
             else:
                 return "The next topic will be %s in %s days." % (topic, dayDiff)
             
-def describeNextAssignment(schedule, now=None):
-    if now is None:
-        now = datetime.datetime.now()
-        
+def describeNextAssignment(schedule, now):
     for classStart, topic, due in schedule:
         if classStart == now and len(due) >= 1 and len(due[0]) >= 1:
-            return "Today " + formatDue(due) + "."
+            return "For assignments, today %s." % formatDue(due)
         if classStart > now and len(due) >= 1 and len(due[0]) >= 1:
             dayDiff = (classStart - now).days
             if dayDiff == 1:
-                return "Tomorrow " + formatDue(due) + "."
+                return "For assignments, tomorrow %s." % formatDue(due)
             else:
-                return "On " + classStart.strftime("%A, %B %d, ") + formatDue(due) + "."
+                return "For assignments, %s on %s, which is in %s days." % (
+                    formatDue(due), classStart.strftime("%B %d"), dayDiff)
 
 def formatDue(due):
     items = [re.sub("(\w+)$", r"is \1", item)
