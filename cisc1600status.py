@@ -125,6 +125,8 @@ def describeNextAssignment(schedule, now):
             return "For assignments, today %s." % formatDue(due)
         if classStart > now and len(due) >= 1 and len(due[0]) >= 1:
             dayDiff = (classStart - now).days
+            if dayDiff == 0:
+                return "For assigments, today %s." % formatDue(due)
             if dayDiff == 1:
                 return "For assignments, tomorrow %s." % formatDue(due)
             else:
