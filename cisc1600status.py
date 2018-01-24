@@ -10,6 +10,7 @@ http://amzn.to/1LGWsLG
 from __future__ import print_function
 import bs4
 import datetime
+import os
 import re
 import urllib2
 
@@ -100,12 +101,16 @@ def tableToListOfLists(table):
     return data
 
 def parseListOfLists(lol):
-    return [(parseDate(row[0]), row[1], row[2].split('\n '))
-            for row in lol if len(row) >= 3]
+    return [(parseDate(row[0]), row[2], row[3].split(', '))
+            for row in lol if hasDate(row)]
         
 def parseDate(dateStr):
-    return datetime.datetime.strptime(dateStr.split(u'\xa0')[0] + " 11:00",
+    time = os.environ['CLASS_TIME'] if 'CLASS_TIME' in os.environ else "14:00"
+    return datetime.datetime.strptime(dateStr.split(u'\xa0')[0] + " " + time,
                                       '%Y/%m/%d %H:%M')
+
+def hasDate(row):
+    return row and row[0]
 
 def describeNextClassTopic(schedule, now):
     for classStart, topic, due in schedule:
