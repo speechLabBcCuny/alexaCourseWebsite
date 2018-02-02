@@ -101,7 +101,9 @@ def tableToListOfLists(table):
     return data
 
 def parseListOfLists(lol):
-    return [(parseDate(row[0]), row[2], row[3].split(', '))
+    return [{'classStart': parseDate(row[0]),
+             'topic': row[2],
+             'due': row[3].split(', ')}
             for row in lol if hasDate(row)]
         
 def parseDate(dateStr):
@@ -113,10 +115,10 @@ def hasDate(row):
     return row and row[0]
 
 def describeNextClassTopic(schedule, now):
-    for classStart, topic, due in schedule:
-        if classStart > now:
-            mainTopic = topic.split('\n')[0]
-            dayDiff = (classStart - now).days
+    for row in schedule:
+        if row['classStart'] > now:
+            mainTopic = row['topic'].split('\n')[0]
+            dayDiff = (row['classStart'] - now).days
             if dayDiff == 0:
                 return "Today's topic is %s." % mainTopic
             if dayDiff == 1:
@@ -125,18 +127,18 @@ def describeNextClassTopic(schedule, now):
                 return "The next topic will be %s in %s days." % (mainTopic, dayDiff)
             
 def describeNextAssignment(schedule, now):
-    for classStart, topic, due in schedule:
-        if classStart == now and len(due) >= 1 and len(due[0]) >= 1:
-            return "For assignments, today %s." % formatDue(due)
-        if classStart > now and len(due) >= 1 and len(due[0]) >= 1:
-            dayDiff = (classStart - now).days
+    for row in schedule:
+        if row['classStart'] == now and len(row['due']) >= 1 and len(row['due'][0]) >= 1:
+            return "For assignments, today %s." % formatDue(row['due'])
+        if row['classStart'] > now and len(row['due']) >= 1 and len(row['due'][0]) >= 1:
+            dayDiff = (row['classStart'] - now).days
             if dayDiff == 0:
-                return "For assigments, today %s." % formatDue(due)
+                return "For assigments, today %s." % formatDue(row['due'])
             if dayDiff == 1:
-                return "For assignments, tomorrow %s." % formatDue(due)
+                return "For assignments, tomorrow %s." % formatDue(row['due'])
             else:
                 return "For assignments, %s on %s, which is in %s days." % (
-                    formatDue(due), classStart.strftime("%B %d"), dayDiff)
+                    formatDue(row['due']), row['classStart'].strftime("%B %d"), dayDiff)
 
 def formatDue(due):
     items = [re.sub("(\w+)$", r"is \1", item)
