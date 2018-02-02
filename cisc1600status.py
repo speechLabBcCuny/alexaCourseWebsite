@@ -118,17 +118,17 @@ def hasDate(row):
 def describeNextClassTopic(schedule, now):
     for row in schedule:
         if row['classStart'] > now:
-            mainTopic = row['topic'].split('\n')[0]
+            mainTopic = row['topic'].split(',')[0]
             dayDiff = (row['classStart'] - now).days
             room = 'Ingersoll ' + re.sub("[^0-9]", r"", row['room'])
             if dayDiff == 0:
-                return "Today's class is in %s. The topic is %s." % (room, mainTopic)
+                return "Today's class is %s in %s." % (mainTopic, room)
             if dayDiff == 1:
-                return "Tomorrow's class is in %s. The topic will be %s." % (
-                    room, mainTopic)
+                return "Tomorrow's class is %s in %s." % (
+                    mainTopic, room)
             else:
-                return ("The next class will be in %s in %s days. "
-                        "The topic will be %s.") % (room, dayDiff, mainTopic)
+                return "The next class will be %s in %s in %s days." % (
+                    mainTopic, room, dayDiff)
             
 def describeNextAssignment(schedule, now):
     for row in schedule:
