@@ -102,6 +102,7 @@ def tableToListOfLists(table):
 
 def parseListOfLists(lol):
     return [{'classStart': parseDate(row[0]),
+             'room': row[1],
              'topic': row[2],
              'due': row[3].split(', ')}
             for row in lol if hasDate(row)]
@@ -119,12 +120,14 @@ def describeNextClassTopic(schedule, now):
         if row['classStart'] > now:
             mainTopic = row['topic'].split('\n')[0]
             dayDiff = (row['classStart'] - now).days
+            room = 'Ingersoll ' + re.sub("[^0-9]", r"", row['room'])
             if dayDiff == 0:
-                return "Today's topic is %s." % mainTopic
+                return "Today's class is in %s. The topic is %s." % (room, mainTopic)
             if dayDiff == 1:
-                return "Tomorrow's topic will be %s." % mainTopic
+                return "Tomorrow's class is in %s. The topic will be %s." % (
+                    room, mainTopic)
             else:
-                return "The next topic will be %s in %s days." % (mainTopic, dayDiff)
+                return "The next class will be in %s in %s days. The topic will be %s." % (room, dayDiff, mainTopic)
             
 def describeNextAssignment(schedule, now):
     for row in schedule:
