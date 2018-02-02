@@ -9,6 +9,7 @@ http://amzn.to/1LGWsLG
 
 from __future__ import print_function
 import bs4
+import calendar
 import datetime
 import os
 import re
@@ -126,6 +127,9 @@ def describeNextClassTopic(schedule, now):
             if dayDiff == 1:
                 return "Tomorrow's class is %s in %s." % (
                     mainTopic, room)
+            if dayDiff < 7:
+                day = calendar.day_name[row['classStart'].weekday()]
+                return "%s's class is %s in %s." % (day, mainTopic, room)
             else:
                 return "The next class will be %s in %s in %s days." % (
                     mainTopic, room, dayDiff)
@@ -140,6 +144,9 @@ def describeNextAssignment(schedule, now):
                 return "For assigments, today %s." % formatDue(row['due'])
             if dayDiff == 1:
                 return "For assignments, tomorrow %s." % formatDue(row['due'])
+            if dayDiff < 7:
+                day = calendar.day_name[row['classStart'].weekday()]
+                return "For assignments, %s on %s." % (formatDue(row['due']), day)
             else:
                 return "For assignments, %s on %s, which is in %s days." % (
                     formatDue(row['due']), row['classStart'].strftime("%B %d"),
