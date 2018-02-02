@@ -127,13 +127,14 @@ def describeNextClassTopic(schedule, now):
                 return "Tomorrow's class is in %s. The topic will be %s." % (
                     room, mainTopic)
             else:
-                return "The next class will be in %s in %s days. The topic will be %s." % (room, dayDiff, mainTopic)
+                return ("The next class will be in %s in %s days. "
+                        "The topic will be %s.") % (room, dayDiff, mainTopic)
             
 def describeNextAssignment(schedule, now):
     for row in schedule:
-        if row['classStart'] == now and len(row['due']) >= 1 and len(row['due'][0]) >= 1:
+        if row['classStart'] == now and row['due'] and row['due'][0]:
             return "For assignments, today %s." % formatDue(row['due'])
-        if row['classStart'] > now and len(row['due']) >= 1 and len(row['due'][0]) >= 1:
+        if row['classStart'] > now and row['due'] and row['due'][0]:
             dayDiff = (row['classStart'] - now).days
             if dayDiff == 0:
                 return "For assigments, today %s." % formatDue(row['due'])
@@ -141,7 +142,8 @@ def describeNextAssignment(schedule, now):
                 return "For assignments, tomorrow %s." % formatDue(row['due'])
             else:
                 return "For assignments, %s on %s, which is in %s days." % (
-                    formatDue(row['due']), row['classStart'].strftime("%B %d"), dayDiff)
+                    formatDue(row['due']), row['classStart'].strftime("%B %d"),
+                    dayDiff)
 
 def formatDue(due):
     items = [re.sub("(\w+)$", r"is \1", item)
