@@ -18,16 +18,17 @@ import urllib2
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text, should_end_session):
+def build_speechlet_response(title, speech_output, text_output,
+                             reprompt_text, should_end_session):
     return {
         'outputSpeech': {
             'type': 'PlainText',
-            'text': output
+            'text': speech_output
         },
         'card': {
             'type': 'Simple',
             'title': title,
-            'content': output
+            'content': text_output
         },
         'reprompt': {
             'outputSpeech': {
@@ -55,24 +56,24 @@ def get_welcome_response():
 
     session_attributes = {}
     card_title = "CISC 1600"
-    speech_output = parseCisc1600Page()
+    speech_output, text_output = parseCisc1600Page()
 
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
     reprompt_text = None
     should_end_session = True
     return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
+        card_title, speech_output, text_output, reprompt_text, should_end_session))
 
 
 def handle_session_end_request():
     card_title = "Session Ended"
-    speech_output = "Thank you for talk to CISC 1600. " \
+    speech_output = "Thank you for talking to CISC 1600. " \
                     "Have a nice day! "
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
     return build_response({}, build_speechlet_response(
-        card_title, speech_output, None, should_end_session))
+        card_title, speech_output, text_output, None, should_end_session))
 
 
 # --------------- Helpers for crawling page ------------------
@@ -87,8 +88,11 @@ def parseCisc1600Page(now=None):
 
     table = soup.body.find('table', attrs={'id' : 'weeks'})
     schedule = parseListOfLists(tableToListOfLists(table))
-    return describeNextClassTopic(schedule, now) \
+    speech_output = describeNextClassTopic(schedule, now, True) \
         + " " + describeNextAssignment(schedule, now)
+    text_output = describeNextClassTopic(schedule, now, False) \
+        + " " + describeNextAssignment(schedule, now)
+    return speech_output, text_output
 
 
 def tableToListOfLists(table):
@@ -116,12 +120,12 @@ def parseDate(dateStr):
 def hasDate(row):
     return row and row[0]
 
-def describeNextClassTopic(schedule, now):
+def describeNextClassTopic(schedule, now, forSpeech=False):
     for row in schedule:
         if row['classStart'] > now:
             mainTopic = row['topic'].split(',')[0]
             dayDiff = (row['classStart'] - now).days
-            room = 'Ingersoll ' + re.sub("[^0-9]", r"", row['room'])
+            room = parseRoom(row['room'], forSpeech)
             if dayDiff == 0:
                 return "Today's class is %s in %s." % (mainTopic, room)
             if dayDiff == 1:
@@ -133,6 +137,14 @@ def describeNextClassTopic(schedule, now):
             else:
                 return "The next class will be %s in %s in %s days." % (
                     mainTopic, room, dayDiff)
+
+def parseRoom(room, forSpeech):
+    room = re.sub('[^0-9]*', r'', room)
+    if forSpeech:
+        room = re.sub('0', 'o',
+                      re.sub("([0-9][0-9])([0-9])([0-9])",
+                             r"\1-\2-\3", room))
+    return 'Ingersoll ' + room
             
 def describeNextAssignment(schedule, now):
     for row in schedule:
